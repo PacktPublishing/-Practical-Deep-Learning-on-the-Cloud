@@ -1,0 +1,63 @@
+service: PracticalDeepLearningStepFunctions
+
+frameworkVersion: ">=1.2.0 <2.0.0"
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: python3.6
+  memorySize: 128
+  timeout: 10
+
+package:
+  exclude:
+    - node_modules/**
+
+functions:
+  branch:
+    handler: index.handlerBranch
+  map:
+    handler: index.handlerMap
+  reduce:
+    handler: index.handlerReduce
+
+
+stepFunctions:
+  stateMachines:
+    HelloWorldStepFunction:
+      events:
+        - http:
+            path: startFunction
+            method: GET
+      name: HelloWorldStepFunction
+      definition:
+        StartAt: StartStepF
+        States:
+          StartStepF:
+            Type: Task
+            Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-map
+            Next: Parallel
+          Parallel:
+            Type: Parallel
+            Next: EndStepF
+            Branches:
+              - StartAt: Branch1
+                States:
+                  Branch1:
+                    Type: Task
+                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-branch
+                    End: True
+              - StartAt: Branch2
+                States:
+                  Branch2:
+                    Type: Task
+                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-branch
+                    End: True
+          EndStepF:
+            Type: Task
+            Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-reduce
+            End: true
+
+plugins:
+  - serverless-step-functions
+  - serverless-pseudo-parameters

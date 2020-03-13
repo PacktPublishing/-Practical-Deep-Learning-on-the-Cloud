@@ -1,0 +1,684 @@
+{
+  "service": {
+    "service": "PracticalDeepLearningStepFunctions",
+    "serviceObject": {
+      "name": "PracticalDeepLearningStepFunctions"
+    },
+    "provider": {
+      "stage": "dev",
+      "region": "us-east-1",
+      "variableSyntax": "\\${([ ~:a-zA-Z0-9._@'\",\\-\\/\\(\\)]+?)}",
+      "name": "aws",
+      "runtime": "python3.6",
+      "memorySize": 128,
+      "timeout": 10,
+      "versionFunctions": true,
+      "remoteFunctionData": null,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "BranchLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/PracticalDeepLearningStepFunctions-dev-branch"
+            }
+          },
+          "MapLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/PracticalDeepLearningStepFunctions-dev-map"
+            }
+          },
+          "ReduceLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/PracticalDeepLearningStepFunctions-dev-reduce"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "dev",
+                        "PracticalDeepLearningStepFunctions",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/PracticalDeepLearningStepFunctions-dev-branch:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/PracticalDeepLearningStepFunctions-dev-map:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/PracticalDeepLearningStepFunctions-dev-reduce:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/PracticalDeepLearningStepFunctions-dev-branch:*:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/PracticalDeepLearningStepFunctions-dev-map:*:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/PracticalDeepLearningStepFunctions-dev-reduce:*:*"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "PracticalDeepLearningStepFunctions",
+                    "dev",
+                    "us-east-1",
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "BranchLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/PracticalDeepLearningStepFunctions/dev/1575957067902-2019-12-10T05:51:07.902Z/PracticalDeepLearningStepFunctions.zip"
+              },
+              "FunctionName": "PracticalDeepLearningStepFunctions-dev-branch",
+              "Handler": "index.handlerBranch",
+              "MemorySize": 128,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "Runtime": "python3.6",
+              "Timeout": 10
+            },
+            "DependsOn": [
+              "BranchLogGroup",
+              "IamRoleLambdaExecution"
+            ]
+          },
+          "BranchLambdaVersionNtSLWrZv0FynZXEh2JHlGO7x3PQeAJDbRHJ6fWTacA": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "BranchLambdaFunction"
+              },
+              "CodeSha256": "wCq1nS70MrqEI+YlXqLQog+cdkw7mNkxUmFVfKHvNsQ="
+            }
+          },
+          "MapLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/PracticalDeepLearningStepFunctions/dev/1575957067902-2019-12-10T05:51:07.902Z/PracticalDeepLearningStepFunctions.zip"
+              },
+              "FunctionName": "PracticalDeepLearningStepFunctions-dev-map",
+              "Handler": "index.handlerMap",
+              "MemorySize": 128,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "Runtime": "python3.6",
+              "Timeout": 10
+            },
+            "DependsOn": [
+              "MapLogGroup",
+              "IamRoleLambdaExecution"
+            ]
+          },
+          "MapLambdaVersionPKU50MFwff0cRXec8SvChTHRBJSl41gB5OMNnPiYq5w": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "MapLambdaFunction"
+              },
+              "CodeSha256": "wCq1nS70MrqEI+YlXqLQog+cdkw7mNkxUmFVfKHvNsQ="
+            }
+          },
+          "ReduceLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/PracticalDeepLearningStepFunctions/dev/1575957067902-2019-12-10T05:51:07.902Z/PracticalDeepLearningStepFunctions.zip"
+              },
+              "FunctionName": "PracticalDeepLearningStepFunctions-dev-reduce",
+              "Handler": "index.handlerReduce",
+              "MemorySize": 128,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "Runtime": "python3.6",
+              "Timeout": 10
+            },
+            "DependsOn": [
+              "ReduceLogGroup",
+              "IamRoleLambdaExecution"
+            ]
+          },
+          "ReduceLambdaVersion4ZhIkGHlNmZ3gdqdsnqrgidCwQdWmZ7uC8md6rv4yE8": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ReduceLambdaFunction"
+              },
+              "CodeSha256": "wCq1nS70MrqEI+YlXqLQog+cdkw7mNkxUmFVfKHvNsQ="
+            }
+          },
+          "IamRoleStateMachineExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": "states.us-east-1.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": "dev-us-east-1-PracticalDeepLearningStepFunctions-statemachine",
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "lambda:InvokeFunction"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-map"
+                          },
+                          {
+                            "Fn::Sub": [
+                              "${functionArn}:*",
+                              {
+                                "functionArn": {
+                                  "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-map"
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-branch"
+                          },
+                          {
+                            "Fn::Sub": [
+                              "${functionArn}:*",
+                              {
+                                "functionArn": {
+                                  "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-branch"
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-reduce"
+                          },
+                          {
+                            "Fn::Sub": [
+                              "${functionArn}:*",
+                              {
+                                "functionArn": {
+                                  "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-reduce"
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "HelloWorldStepFunction": {
+            "Type": "AWS::StepFunctions::StateMachine",
+            "Properties": {
+              "DefinitionString": {
+                "Fn::Sub": "{\n  \"StartAt\": \"StartStepF\",\n  \"States\": {\n    \"StartStepF\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-map\",\n      \"Next\": \"Parallel\"\n    },\n    \"Parallel\": {\n      \"Type\": \"Parallel\",\n      \"Next\": \"EndStepF\",\n      \"Branches\": [\n        {\n          \"StartAt\": \"Branch1\",\n          \"States\": {\n            \"Branch1\": {\n              \"Type\": \"Task\",\n              \"Resource\": \"arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-branch\",\n              \"End\": true\n            }\n          }\n        },\n        {\n          \"StartAt\": \"Branch2\",\n          \"States\": {\n            \"Branch2\": {\n              \"Type\": \"Task\",\n              \"Resource\": \"arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-branch\",\n              \"End\": true\n            }\n          }\n        }\n      ]\n    },\n    \"EndStepF\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-reduce\",\n      \"End\": true\n    }\n  }\n}"
+              },
+              "RoleArn": {
+                "Fn::GetAtt": [
+                  "IamRoleStateMachineExecution",
+                  "Arn"
+                ]
+              },
+              "Tags": [],
+              "StateMachineName": "HelloWorldStepFunction"
+            },
+            "DependsOn": [
+              "IamRoleStateMachineExecution"
+            ]
+          },
+          "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+              "Name": "dev-PracticalDeepLearningStepFunctions",
+              "EndpointConfiguration": {
+                "Types": [
+                  "EDGE"
+                ]
+              }
+            }
+          },
+          "ApiGatewayResourceStartfunction": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "startFunction",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodStartfunctionGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "AuthorizationType": "NONE",
+              "ApiKeyRequired": false,
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceStartfunction"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS",
+                "Credentials": {
+                  "Fn::GetAtt": [
+                    "ApigatewayToStepFunctionsRole",
+                    "Arn"
+                  ]
+                },
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":states:action/StartExecution"
+                    ]
+                  ]
+                },
+                "PassthroughBehavior": "NEVER",
+                "RequestTemplates": {
+                  "application/json": {
+                    "Fn::Sub": [
+                      "\n#set( $body = $util.escapeJavaScript($input.json('$')).replaceAll(\"\\\\'\", \"'\") )\n{\"input\": \"$body\", \"name\": \"$context.requestId\", \"stateMachineArn\":\"${StateMachineArn}\"}",
+                      {
+                        "StateMachineArn": {
+                          "Ref": "HelloWorldStepFunction"
+                        }
+                      }
+                    ]
+                  },
+                  "application/x-www-form-urlencoded": {
+                    "Fn::Sub": [
+                      "\n#set( $body = $util.escapeJavaScript($input.json('$')).replaceAll(\"\\\\'\", \"'\") )\n{\"input\": \"$body\", \"name\": \"$context.requestId\", \"stateMachineArn\":\"${StateMachineArn}\"}",
+                      {
+                        "StateMachineArn": {
+                          "Ref": "HelloWorldStepFunction"
+                        }
+                      }
+                    ]
+                  }
+                },
+                "IntegrationResponses": [
+                  {
+                    "StatusCode": 200,
+                    "SelectionPattern": 200,
+                    "ResponseParameters": {},
+                    "ResponseTemplates": {}
+                  },
+                  {
+                    "StatusCode": 400,
+                    "SelectionPattern": 400,
+                    "ResponseParameters": {},
+                    "ResponseTemplates": {}
+                  }
+                ]
+              },
+              "MethodResponses": [
+                {
+                  "ResponseParameters": {},
+                  "ResponseModels": {},
+                  "StatusCode": 200
+                },
+                {
+                  "ResponseParameters": {},
+                  "ResponseModels": {},
+                  "StatusCode": 400
+                }
+              ]
+            }
+          },
+          "ApigatewayToStepFunctionsRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": "apigateway.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": "apigatewaytostepfunctions",
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "states:StartExecution"
+                        ],
+                        "Resource": "*"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "ApiGatewayDeployment1575957067929": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "StageName": "dev"
+            },
+            "DependsOn": [
+              "ApiGatewayMethodStartfunctionGet"
+            ]
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          },
+          "BranchLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "BranchLambdaVersionNtSLWrZv0FynZXEh2JHlGO7x3PQeAJDbRHJ6fWTacA"
+            }
+          },
+          "MapLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "MapLambdaVersionPKU50MFwff0cRXec8SvChTHRBJSl41gB5OMNnPiYq5w"
+            }
+          },
+          "ReduceLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "ReduceLambdaVersion4ZhIkGHlNmZ3gdqdsnqrgidCwQdWmZ7uC8md6rv4yE8"
+            }
+          },
+          "HelloWorldStepFunctionArn": {
+            "Description": "Current StateMachine Arn",
+            "Value": {
+              "Ref": "HelloWorldStepFunction"
+            }
+          },
+          "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  },
+                  "/dev"
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "coreCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "plugins": [
+      "serverless-step-functions",
+      "serverless-pseudo-parameters"
+    ],
+    "pluginsData": {},
+    "functions": {
+      "branch": {
+        "handler": "index.handlerBranch",
+        "events": [],
+        "name": "PracticalDeepLearningStepFunctions-dev-branch",
+        "package": {},
+        "memory": 128,
+        "timeout": 10,
+        "runtime": "python3.6",
+        "vpc": {}
+      },
+      "map": {
+        "handler": "index.handlerMap",
+        "events": [],
+        "name": "PracticalDeepLearningStepFunctions-dev-map",
+        "package": {},
+        "memory": 128,
+        "timeout": 10,
+        "runtime": "python3.6",
+        "vpc": {}
+      },
+      "reduce": {
+        "handler": "index.handlerReduce",
+        "events": [],
+        "name": "PracticalDeepLearningStepFunctions-dev-reduce",
+        "package": {},
+        "memory": 128,
+        "timeout": 10,
+        "runtime": "python3.6",
+        "vpc": {}
+      }
+    },
+    "layers": {},
+    "stepFunctions": {
+      "stateMachines": {
+        "HelloWorldStepFunction": {
+          "events": [
+            {
+              "http": {
+                "path": "startFunction",
+                "method": "get"
+              }
+            }
+          ],
+          "name": "HelloWorldStepFunction",
+          "definition": {
+            "StartAt": "StartStepF",
+            "States": {
+              "StartStepF": {
+                "Type": "Task",
+                "Resource": "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-map",
+                "Next": "Parallel"
+              },
+              "Parallel": {
+                "Type": "Parallel",
+                "Next": "EndStepF",
+                "Branches": [
+                  {
+                    "StartAt": "Branch1",
+                    "States": {
+                      "Branch1": {
+                        "Type": "Task",
+                        "Resource": "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-branch",
+                        "End": true
+                      }
+                    }
+                  },
+                  {
+                    "StartAt": "Branch2",
+                    "States": {
+                      "Branch2": {
+                        "Type": "Task",
+                        "Resource": "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-branch",
+                        "End": true
+                      }
+                    }
+                  }
+                ]
+              },
+              "EndStepF": {
+                "Type": "Task",
+                "Resource": "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:PracticalDeepLearningStepFunctions-dev-reduce",
+                "End": true
+              }
+            }
+          }
+        }
+      },
+      "activities": []
+    },
+    "artifact": "/Users/ryfeus/GoogleDrive/CourseBlogsProposals/Course - Practical deep learning in Cloud/Code/lesson2.5/.serverless/PracticalDeepLearningStepFunctions.zip"
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/PracticalDeepLearningStepFunctions/dev/1575957067902-2019-12-10T05:51:07.902Z",
+    "artifact": "PracticalDeepLearningStepFunctions.zip"
+  }
+}
