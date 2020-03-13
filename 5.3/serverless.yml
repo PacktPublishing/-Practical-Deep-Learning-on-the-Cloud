@@ -1,0 +1,389 @@
+service: DataPipeline
+
+frameworkVersion: ">=1.2.0 <2.0.0"
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: python3.6
+  memorySize: 1536
+  timeout: 30
+  iamRoleStatements:
+    # Allow the Lambda to download and upload files to S3 bucket
+    - Effect: Allow
+      Action:
+        - 's3:ListBucket'
+      Resource: 'arn:aws:s3:::#{S3BucketName}'
+    - Effect: Allow
+      Action:
+        - 's3:PutObject'
+        - 's3:GetObject'
+      Resource: 'arn:aws:s3:::#{S3BucketName}/*'
+
+package:
+  exclude:
+    - node_modules/**
+
+functions:
+  branch:
+    handler: index.handlerBranch
+  map:
+    handler: index.handlerMap
+  reduce:
+    handler: index.handlerReduce
+  publisher:
+    handler: index.handlerPublisher
+
+
+stepFunctions:
+  stateMachines:
+    FargateStepFunction:
+      events:
+        - http:
+            path: startFunction
+            method: GET
+      name: ${self:service}-StepFunction
+      role:
+        Fn::GetAtt: [ECSPassRole, Arn]
+      definition:
+        StartAt: StartStepF
+        States:
+          StartStepF:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [map, Arn]
+            Next: MapStep
+          MapStep:
+            Type: Map
+            ItemsPath: "$.tasks"
+            Iterator:
+              StartAt: FirstMapTask
+              States:
+                FirstMapTask:
+                  Type: Task
+                  Resource:
+                    Fn::GetAtt: [branch, Arn]
+                  End: true
+            ResultPath: "$.map_result"
+            Next: ReduceStep
+          ReduceStep:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [reduce, Arn]
+            ResultPath: "$.task_result"
+            Next: FargateStep
+          FargateStep:
+            Type: Task
+            Resource: arn:aws:states:::ecs:runTask.sync
+            Parameters:
+              Cluster: "#{ECSCluster}"
+              TaskDefinition: "#{FargateTaskDefinition}"
+              LaunchType: FARGATE
+              NetworkConfiguration:
+                AwsvpcConfiguration:
+                  Subnets:
+                    - "#{PublicSubnetOne}"
+                    - "#{PublicSubnetTwo}"
+                  AssignPublicIp: ENABLED
+              Overrides:
+                ContainerOverrides:
+                  - Name: "#{ServiceName}"
+                    Command.$: "$.task_result"
+                    Cpu: 1
+                    Memory: 512
+                    MemoryReservation: 512
+            Retry:
+              - ErrorEquals:
+                - "States.Timeout"
+                IntervalSeconds: 10
+                MaxAttempts: 2
+                BackoffRate: 2
+            Next: EndStepF
+          EndStepF:
+            Type: Task
+            ResultPath: "$.fargate_result"
+            Resource:
+              Fn::GetAtt: [publisher, Arn]
+            End: true
+
+plugins:
+  - serverless-step-functions
+  - serverless-pseudo-parameters
+
+resources:
+  Parameters:
+    ServiceName:
+      Type: String
+      Default: datapipeline-fargate
+      Description: A name for the service
+    ImageName:
+      Type: String
+      Default: datapipeline-fargate:latest
+      Description: The url of a docker image that contains the application process that
+                   will handle the traffic for this service
+    S3BucketName:
+      Type: String
+      Default: course-pdl-datapipeline
+      Description: S3 bucket which we will use to store raw and processed dataset
+    ContainerCpu:
+      Type: Number
+      Default: 2048
+      Description: How much CPU to give the container. 1024 is 1 CPU
+    ContainerMemory:
+      Type: Number
+      Default: 4096
+      Description: How much memory in megabytes to give the container
+    LogGroup:
+      Type: String
+      Default: "/stepfunctions/datapipeline/"
+      Description: Log group for the Fargate tasks
+    LogPrefix:
+      Type: String
+      Default: "datapipeline"
+      Description: Log prefix for the Fargate tasks
+
+  Resources:
+    # VPC in which containers will be deployed. It has two public subnets.
+    VPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        EnableDnsSupport: true
+        EnableDnsHostnames: true
+        CidrBlock: '10.0.0.0/16'
+
+    # Two public subnets, where containers can have public IP addresses
+    PublicSubnetOne:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone:
+           Fn::Select:
+           - 0
+           - Fn::GetAZs: {Ref: 'AWS::Region'}
+        VpcId: !Ref 'VPC'
+        CidrBlock: '10.0.0.0/24'
+        MapPublicIpOnLaunch: true
+    PublicSubnetTwo:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone:
+           Fn::Select:
+           - 1
+           - Fn::GetAZs: {Ref: 'AWS::Region'}
+        VpcId: !Ref 'VPC'
+        CidrBlock: '10.0.1.0/24'
+        MapPublicIpOnLaunch: true
+
+    # Setup networking resources for the public subnets. Containers
+    # in the public subnets have public IP addresses and the routing table
+    # sends network traffic via the internet gateway.
+    InternetGateway:
+      Type: AWS::EC2::InternetGateway
+    GatewayAttachement:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId: !Ref 'VPC'
+        InternetGatewayId: !Ref 'InternetGateway'
+    PublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: !Ref 'VPC'
+    PublicRoute:
+      Type: AWS::EC2::Route
+      DependsOn: GatewayAttachement
+      Properties:
+        RouteTableId: !Ref 'PublicRouteTable'
+        DestinationCidrBlock: '0.0.0.0/0'
+        GatewayId: !Ref 'InternetGateway'
+    PublicSubnetOneRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId: !Ref PublicSubnetOne
+        RouteTableId: !Ref PublicRouteTable
+    PublicSubnetTwoRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId: !Ref PublicSubnetTwo
+        RouteTableId: !Ref PublicRouteTable
+
+    # ECS Resources
+    ECSCluster:
+      Type: AWS::ECS::Cluster
+
+    # A security group for the containers we will run in Fargate.
+    # Two rules, allowing network traffic from a public facing load
+    # balancer and from other members of the security group.
+    FargateContainerSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Access to the Fargate containers
+        VpcId: !Ref 'VPC'
+    ECSRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs.amazonaws.com]
+            Action: ['sts:AssumeRole']
+        Path: /
+        Policies:
+        - PolicyName: ecs-service
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+                # Rules which allow ECS to attach network interfaces to instances
+                # on your behalf in order for awsvpc networking mode to work right
+                - 'ec2:AttachNetworkInterface'
+                - 'ec2:CreateNetworkInterface'
+                - 'ec2:CreateNetworkInterfacePermission'
+                - 'ec2:DeleteNetworkInterface'
+                - 'ec2:DeleteNetworkInterfacePermission'
+                - 'ec2:Describe*'
+                - 'ec2:DetachNetworkInterface'
+              Resource: '*'
+
+    # This is a role which is used by the ECS tasks themselves.
+    ECSTaskExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs-tasks.amazonaws.com]
+            Action: ['sts:AssumeRole']
+        Path: /
+        Policies:
+          - PolicyName: AmazonECSTaskExecutionRolePolicy
+            PolicyDocument:
+              Statement:
+              # Allow the ECS Tasks to download images from ECR
+              - Effect: Allow
+                Action:
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                Resource: '*'
+              # Allow the ECS tasks to upload logs to CloudWatch
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+    # This is a role which is used by the code within tasks.
+    ECSTaskRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs-tasks.amazonaws.com]
+            Action: ['sts:AssumeRole']
+        Path: /
+        Policies:
+          - PolicyName: AmazonECSTaskRolePolicy
+            PolicyDocument:
+              Statement:
+              # Allow the ECS tasks to download and upload files to S3 bucket
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket'
+                Resource: 'arn:aws:s3:::#{S3BucketName}'
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                Resource: 'arn:aws:s3:::#{S3BucketName}/*'
+
+    # The task definition. This is a simple metadata description of what
+    # container to run, and what resource requirements it has.
+    FargateTaskDefinition:
+      Type: AWS::ECS::TaskDefinition
+      Properties:
+        Family: !Ref 'ServiceName'
+        Cpu: !Ref 'ContainerCpu'
+        Memory: !Ref 'ContainerMemory'
+        NetworkMode: awsvpc
+        RequiresCompatibilities:
+          - FARGATE
+        ExecutionRoleArn: !Ref ECSTaskExecutionRole
+        TaskRoleArn: !Ref ECSTaskRole
+        ContainerDefinitions:
+          - Name: !Ref 'ServiceName'
+            Cpu: !Ref 'ContainerCpu'
+            Memory: !Ref 'ContainerMemory'
+            Image: '#{AWS::AccountId}.dkr.ecr.#{AWS::Region}.amazonaws.com/#{ImageName}'
+            LogConfiguration:
+              LogDriver: awslogs
+              Options:
+                awslogs-group: !Ref 'LogGroup'
+                awslogs-region: '#{AWS::Region}'
+                awslogs-stream-prefix: !Ref 'LogPrefix'
+                awslogs-create-group: true
+
+    # The service. The service is a resource which allows you to run multiple
+    # copies of a type of task, and gather up their logs and metrics, as well
+    # as monitor the number of running tasks and replace any that have crashed
+    Service:
+      Type: AWS::ECS::Service
+      Properties:
+        ServiceName: !Ref 'ServiceName'
+        Cluster: !Ref 'ECSCluster'
+        LaunchType: FARGATE
+        DeploymentConfiguration:
+          MaximumPercent: 200
+          MinimumHealthyPercent: 75
+        DesiredCount: 0
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            AssignPublicIp: ENABLED
+            SecurityGroups:
+              - !Ref FargateContainerSecurityGroup
+            Subnets:
+              - !Ref PublicSubnetOne
+              - !Ref PublicSubnetTwo
+        TaskDefinition: !Ref 'FargateTaskDefinition'
+    # This is a role which is used by step functions to invoke Lambdas and Fargate.
+    ECSPassRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service: ['states.#{AWS::Region}.amazonaws.com']
+            Action: ['sts:AssumeRole']
+        Path: /
+        Policies:
+          - PolicyName: AmazonECSPassRolePolicy
+            PolicyDocument:
+              Statement:
+              - Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource:
+                  - 'arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-branch'
+                  - 'arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-map'
+                  - 'arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-reduce'
+                  - 'arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}-publisher'
+              - Effect: Allow
+                Action:
+                  - 'ecs:RunTask'
+                  - 'ecs:StopTask'
+                  - 'ecs:DescribeTasks'
+                Resource: '*' 
+              - Effect: Allow
+                Action:
+                  - 'events:PutTargets'
+                  - 'events:PutRule'
+                  - 'events:DescribeRule'
+                Resource: 'arn:aws:events:#{AWS::Region}:#{AWS::AccountId}:rule/StepFunctionsGetEventsForECSTaskRule'     

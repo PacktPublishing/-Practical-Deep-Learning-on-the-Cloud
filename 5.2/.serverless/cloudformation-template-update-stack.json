@@ -1,0 +1,946 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "BranchLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/StepFunctionFargate-dev-branch"
+      }
+    },
+    "MapLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/StepFunctionFargate-dev-map"
+      }
+    },
+    "ReduceLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/StepFunctionFargate-dev-reduce"
+      }
+    },
+    "PublisherLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/StepFunctionFargate-dev-publisher"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "dev",
+                  "StepFunctionFargate",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/StepFunctionFargate-dev-branch:*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/StepFunctionFargate-dev-map:*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/StepFunctionFargate-dev-reduce:*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/StepFunctionFargate-dev-publisher:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/StepFunctionFargate-dev-branch:*:*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/StepFunctionFargate-dev-map:*:*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/StepFunctionFargate-dev-reduce:*:*"
+                    },
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/StepFunctionFargate-dev-publisher:*:*"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "StepFunctionFargate",
+              "dev",
+              "us-east-1",
+              "lambdaRole"
+            ]
+          ]
+        }
+      }
+    },
+    "BranchLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/StepFunctionFargate/dev/1580881425186-2020-02-05T05:43:45.186Z/StepFunctionFargate.zip"
+        },
+        "FunctionName": "StepFunctionFargate-dev-branch",
+        "Handler": "index.handlerBranch",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.6",
+        "Timeout": 10
+      },
+      "DependsOn": [
+        "BranchLogGroup",
+        "IamRoleLambdaExecution"
+      ]
+    },
+    "BranchLambdaVersionazXeamQzJYofBrCeju84TABRAxW1Yfennpw8D4Of0": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "BranchLambdaFunction"
+        },
+        "CodeSha256": "gD1XDVqjsCbJLErpMaMGXf7AC67jo29FPwvLsX6MXMQ="
+      }
+    },
+    "MapLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/StepFunctionFargate/dev/1580881425186-2020-02-05T05:43:45.186Z/StepFunctionFargate.zip"
+        },
+        "FunctionName": "StepFunctionFargate-dev-map",
+        "Handler": "index.handlerMap",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.6",
+        "Timeout": 10
+      },
+      "DependsOn": [
+        "MapLogGroup",
+        "IamRoleLambdaExecution"
+      ]
+    },
+    "MapLambdaVersiontujGurbLE1woyDgJ2uN6K5W4b30WuicEQFPbr0OIo": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "MapLambdaFunction"
+        },
+        "CodeSha256": "gD1XDVqjsCbJLErpMaMGXf7AC67jo29FPwvLsX6MXMQ="
+      }
+    },
+    "ReduceLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/StepFunctionFargate/dev/1580881425186-2020-02-05T05:43:45.186Z/StepFunctionFargate.zip"
+        },
+        "FunctionName": "StepFunctionFargate-dev-reduce",
+        "Handler": "index.handlerReduce",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.6",
+        "Timeout": 10
+      },
+      "DependsOn": [
+        "ReduceLogGroup",
+        "IamRoleLambdaExecution"
+      ]
+    },
+    "ReduceLambdaVersion6CS5eyjtRumCFC5ajzLD569KKe709iHMwFuYw6rE": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "ReduceLambdaFunction"
+        },
+        "CodeSha256": "gD1XDVqjsCbJLErpMaMGXf7AC67jo29FPwvLsX6MXMQ="
+      }
+    },
+    "PublisherLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/StepFunctionFargate/dev/1580881425186-2020-02-05T05:43:45.186Z/StepFunctionFargate.zip"
+        },
+        "FunctionName": "StepFunctionFargate-dev-publisher",
+        "Handler": "index.handlerPublisher",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.6",
+        "Timeout": 10
+      },
+      "DependsOn": [
+        "PublisherLogGroup",
+        "IamRoleLambdaExecution"
+      ]
+    },
+    "PublisherLambdaVersionfdwABBqE6CfVpGwWrRwaXS5Qu90pozl8kGk3lGqE": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "PublisherLambdaFunction"
+        },
+        "CodeSha256": "gD1XDVqjsCbJLErpMaMGXf7AC67jo29FPwvLsX6MXMQ="
+      }
+    },
+    "StepFunctionFargateDashStepFunction": {
+      "Type": "AWS::StepFunctions::StateMachine",
+      "Properties": {
+        "DefinitionString": {
+          "Fn::Sub": [
+            "{\n  \"StartAt\": \"StartStepF\",\n  \"States\": {\n    \"StartStepF\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"${bHOFafDFCs}\",\n      \"Next\": \"MapStep\"\n    },\n    \"MapStep\": {\n      \"Type\": \"Map\",\n      \"ItemsPath\": \"$.tasks\",\n      \"Iterator\": {\n        \"StartAt\": \"FirstMapTask\",\n        \"States\": {\n          \"FirstMapTask\": {\n            \"Type\": \"Task\",\n            \"Resource\": \"${3s1pr87USw}\",\n            \"End\": true\n          }\n        }\n      },\n      \"ResultPath\": \"$.map_result\",\n      \"Next\": \"ReduceStep\"\n    },\n    \"ReduceStep\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"${FROYUZldNt}\",\n      \"ResultPath\": \"$.task_result\",\n      \"Next\": \"FargateStep\"\n    },\n    \"FargateStep\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"arn:aws:states:::ecs:runTask.sync\",\n      \"Parameters\": {\n        \"Cluster\": \"${ECSCluster}\",\n        \"TaskDefinition\": \"${FargateTaskDefinition}\",\n        \"LaunchType\": \"FARGATE\",\n        \"NetworkConfiguration\": {\n          \"AwsvpcConfiguration\": {\n            \"Subnets\": [\n              \"${PublicSubnetOne}\",\n              \"${PublicSubnetTwo}\"\n            ],\n            \"AssignPublicIp\": \"ENABLED\"\n          }\n        },\n        \"Overrides\": {\n          \"ContainerOverrides\": [\n            {\n              \"Name\": \"${ServiceName}\",\n              \"Command.$\": \"$.task_result\",\n              \"Cpu\": 1,\n              \"Memory\": 512,\n              \"MemoryReservation\": 512\n            }\n          ]\n        }\n      },\n      \"Retry\": [\n        {\n          \"ErrorEquals\": [\n            \"States.Timeout\"\n          ],\n          \"IntervalSeconds\": 10,\n          \"MaxAttempts\": 2,\n          \"BackoffRate\": 2\n        }\n      ],\n      \"Next\": \"EndStepF\"\n    },\n    \"EndStepF\": {\n      \"Type\": \"Task\",\n      \"ResultPath\": \"$.fargate_result\",\n      \"Resource\": \"${sUnIaesM5s}\",\n      \"End\": true\n    }\n  }\n}",
+            {
+              "bHOFafDFCs": {
+                "Fn::GetAtt": [
+                  "MapLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "3s1pr87USw": {
+                "Fn::GetAtt": [
+                  "BranchLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "FROYUZldNt": {
+                "Fn::GetAtt": [
+                  "ReduceLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "sUnIaesM5s": {
+                "Fn::GetAtt": [
+                  "PublisherLambdaFunction",
+                  "Arn"
+                ]
+              }
+            }
+          ]
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "ECSPassRole",
+            "Arn"
+          ]
+        },
+        "StateMachineName": "StepFunctionFargate-StepFunction"
+      },
+      "DependsOn": []
+    },
+    "ApiGatewayRestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "dev-StepFunctionFargate",
+        "EndpointConfiguration": {
+          "Types": [
+            "EDGE"
+          ]
+        }
+      }
+    },
+    "ApiGatewayResourceStartfunction": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "ApiGatewayRestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "startFunction",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayMethodStartfunctionGet": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "GET",
+        "RequestParameters": {},
+        "AuthorizationType": "NONE",
+        "ApiKeyRequired": false,
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceStartfunction"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS",
+          "Credentials": {
+            "Fn::GetAtt": [
+              "ApigatewayToStepFunctionsRole",
+              "Arn"
+            ]
+          },
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":states:action/StartExecution"
+              ]
+            ]
+          },
+          "PassthroughBehavior": "NEVER",
+          "RequestTemplates": {
+            "application/json": {
+              "Fn::Sub": [
+                "\n#set( $body = $util.escapeJavaScript($input.json('$')).replaceAll(\"\\\\'\", \"'\") )\n{\"input\": \"$body\", \"name\": \"$context.requestId\", \"stateMachineArn\":\"${StateMachineArn}\"}",
+                {
+                  "StateMachineArn": {
+                    "Ref": "StepFunctionFargateDashStepFunction"
+                  }
+                }
+              ]
+            },
+            "application/x-www-form-urlencoded": {
+              "Fn::Sub": [
+                "\n#set( $body = $util.escapeJavaScript($input.json('$')).replaceAll(\"\\\\'\", \"'\") )\n{\"input\": \"$body\", \"name\": \"$context.requestId\", \"stateMachineArn\":\"${StateMachineArn}\"}",
+                {
+                  "StateMachineArn": {
+                    "Ref": "StepFunctionFargateDashStepFunction"
+                  }
+                }
+              ]
+            }
+          },
+          "IntegrationResponses": [
+            {
+              "StatusCode": 200,
+              "SelectionPattern": 200,
+              "ResponseParameters": {},
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": 400,
+              "SelectionPattern": 400,
+              "ResponseParameters": {},
+              "ResponseTemplates": {}
+            }
+          ]
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {},
+            "ResponseModels": {},
+            "StatusCode": 200
+          },
+          {
+            "ResponseParameters": {},
+            "ResponseModels": {},
+            "StatusCode": 400
+          }
+        ]
+      }
+    },
+    "ApigatewayToStepFunctionsRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "apigatewaytostepfunctions",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "states:StartExecution"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ApiGatewayDeployment1580881425214": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "StageName": "dev"
+      },
+      "DependsOn": [
+        "ApiGatewayMethodStartfunctionGet"
+      ]
+    },
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "EnableDnsSupport": true,
+        "EnableDnsHostnames": true,
+        "CidrBlock": "10.0.0.0/16"
+      }
+    },
+    "PublicSubnetOne": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": "10.0.0.0/24",
+        "MapPublicIpOnLaunch": true
+      }
+    },
+    "PublicSubnetTwo": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": "10.0.1.0/24",
+        "MapPublicIpOnLaunch": true
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway"
+    },
+    "GatewayAttachement": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "PublicRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        }
+      }
+    },
+    "PublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "GatewayAttachement",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "PublicSubnetOneRouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PublicSubnetOne"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PublicSubnetTwoRouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PublicSubnetTwo"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "ECSCluster": {
+      "Type": "AWS::ECS::Cluster"
+    },
+    "FargateContainerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Access to the Fargate containers",
+        "VpcId": {
+          "Ref": "VPC"
+        }
+      }
+    },
+    "ECSRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ecs.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "ecs-service",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:AttachNetworkInterface",
+                    "ec2:CreateNetworkInterface",
+                    "ec2:CreateNetworkInterfacePermission",
+                    "ec2:DeleteNetworkInterface",
+                    "ec2:DeleteNetworkInterfacePermission",
+                    "ec2:Describe*",
+                    "ec2:DetachNetworkInterface"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ECSTaskExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ecs-tasks.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "AmazonECSTaskExecutionRolePolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:GetAuthorizationToken",
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:BatchGetImage",
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "FargateTaskDefinition": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "Family": {
+          "Ref": "ServiceName"
+        },
+        "Cpu": {
+          "Ref": "ContainerCpu"
+        },
+        "Memory": {
+          "Ref": "ContainerMemory"
+        },
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE"
+        ],
+        "ExecutionRoleArn": {
+          "Ref": "ECSTaskExecutionRole"
+        },
+        "ContainerDefinitions": [
+          {
+            "Name": {
+              "Ref": "ServiceName"
+            },
+            "Cpu": {
+              "Ref": "ContainerCpu"
+            },
+            "Memory": {
+              "Ref": "ContainerMemory"
+            },
+            "Image": {
+              "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}"
+            },
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "LogGroup"
+                },
+                "awslogs-region": {
+                  "Fn::Sub": "${AWS::Region}"
+                },
+                "awslogs-stream-prefix": {
+                  "Ref": "LogPrefix"
+                },
+                "awslogs-create-group": true
+              }
+            }
+          }
+        ]
+      }
+    },
+    "Service": {
+      "Type": "AWS::ECS::Service",
+      "Properties": {
+        "ServiceName": {
+          "Ref": "ServiceName"
+        },
+        "Cluster": {
+          "Ref": "ECSCluster"
+        },
+        "LaunchType": "FARGATE",
+        "DeploymentConfiguration": {
+          "MaximumPercent": 200,
+          "MinimumHealthyPercent": 75
+        },
+        "DesiredCount": 0,
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "ENABLED",
+            "SecurityGroups": [
+              {
+                "Ref": "FargateContainerSecurityGroup"
+              }
+            ],
+            "Subnets": [
+              {
+                "Ref": "PublicSubnetOne"
+              },
+              {
+                "Ref": "PublicSubnetTwo"
+              }
+            ]
+          }
+        },
+        "TaskDefinition": {
+          "Ref": "FargateTaskDefinition"
+        }
+      }
+    },
+    "ECSPassRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  {
+                    "Fn::Sub": "states.${AWS::Region}.amazonaws.com"
+                  }
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "AmazonECSPassRolePolicy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "iam:PassRole"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-branch"
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-map"
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-reduce"
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-publisher"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecs:RunTask",
+                    "ecs:StopTask",
+                    "ecs:DescribeTasks"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutTargets",
+                    "events:PutRule",
+                    "events:DescribeRule"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForECSTaskRule"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      }
+    },
+    "BranchLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "BranchLambdaVersionazXeamQzJYofBrCeju84TABRAxW1Yfennpw8D4Of0"
+      }
+    },
+    "MapLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "MapLambdaVersiontujGurbLE1woyDgJ2uN6K5W4b30WuicEQFPbr0OIo"
+      }
+    },
+    "ReduceLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "ReduceLambdaVersion6CS5eyjtRumCFC5ajzLD569KKe709iHMwFuYw6rE"
+      }
+    },
+    "PublisherLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "PublisherLambdaVersionfdwABBqE6CfVpGwWrRwaXS5Qu90pozl8kGk3lGqE"
+      }
+    },
+    "StepFunctionFargateDashStepFunctionArn": {
+      "Description": "Current StateMachine Arn",
+      "Value": {
+        "Ref": "StepFunctionFargateDashStepFunction"
+      }
+    },
+    "ServiceEndpoint": {
+      "Description": "URL of the service endpoint",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "ApiGatewayRestApi"
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            },
+            "/dev"
+          ]
+        ]
+      }
+    }
+  },
+  "Parameters": {
+    "ServiceName": {
+      "Type": "String",
+      "Default": "fargate-example",
+      "Description": "A name for the service"
+    },
+    "ImageName": {
+      "Type": "String",
+      "Default": "fargate-example:latest",
+      "Description": "The url of a docker image that contains the application process that will handle the traffic for this service"
+    },
+    "ContainerCpu": {
+      "Type": "Number",
+      "Default": 2048,
+      "Description": "How much CPU to give the container. 1024 is 1 CPU"
+    },
+    "ContainerMemory": {
+      "Type": "Number",
+      "Default": 4096,
+      "Description": "How much memory in megabytes to give the container"
+    },
+    "LogGroup": {
+      "Type": "String",
+      "Default": "/stepfunctions/fargate-example/",
+      "Description": "Log group for the Fargate tasks"
+    },
+    "LogPrefix": {
+      "Type": "String",
+      "Default": "fargate-example",
+      "Description": "Log prefix for the Fargate tasks"
+    }
+  }
+}

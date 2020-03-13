@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+import sys
+import time
+import os
+import urllib.request
+import shutil
+from scipy.io import loadmat
+import boto3
+import numpy
+
+s3 = boto3.client('s3')
+s3_bucket = 'course-pdl-datapipeline'
+s3_files = [sys.argv[1], sys.argv[2]]
+
+os.mkdir('/app/raw')
+for s3_file in s3_files:
+	s3.download_file(s3_bucket, s3_file, '/app/' + s3_file)
+
+shutil.unpack_archive('/app/raw/102flowers.tgz', '/app')
+label_ids = loadmat('/app/raw/imagelabels.mat')['labels'][0]
+
+print('Unpacked 102flowers.tgz')
+
+num_class_size = 150
+num_train_size = 100
+
+label_flowers = [
+	{
+		'name' : 'Cyclamen',
+		'id' : 88,
+		'folder_name' : 'flower1'
+	},
+	{
+		'name' : 'Lotus',
+		'id' : 73,
+		'folder_name' : 'flower2'
+	},
+	{
+		'name' : 'Passionflower',
+		'id' : 77,
+		'folder_name' : 'flower3'
+	}
+]
+
+def uploadDatasetImage(label, label_name, label_folder, tag):
+	img_file_name = 'image_' + str(label).zfill(5) + '.jpg'
+	str_image_path = '/app/jpg/' + img_file_name
+	s3_key_path = 'dataset/' + tag + '/' + label_folder + '/' + img_file_name
+	print('Uploading ' + img_file_name + ' of class ' + label_name)
+	with open(str_image_path, 'rb') as data:
+		s3.upload_fileobj(data, s3_bucket, s3_key_path)
+
+
+for label_flower in label_flowers:
+	labels = numpy.where(label_ids==label_flower['id'])[0][:num_class_size] + 1
+	train_labels = labels[:num_train_size]
+	val_labels = labels[num_train_size:]
+	for label in train_labels:
+		uploadDatasetImage(label, label_flower['name'], label_flower['folder_name'], 'train')
+
+	for label in val_labels:
+		uploadDatasetImage(label, label_flower['name'], label_flower['folder_name'], 'validation')
+
+
+for obj in s3.list_objects_v2(Bucket=s3_bucket, Prefix="")['Contents']:
+	print(obj['Key'])
+
+sys.exit(0)
