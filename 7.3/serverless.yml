@@ -1,0 +1,102 @@
+service: DeepLearningInferenceProject
+
+frameworkVersion: ">=1.2.0 <2.0.0"
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: python3.7
+  memorySize: 128
+  timeout: 10
+  iamRoleStatements:
+    # Allow Lambda to download and upload files to S3 bucket
+    - Effect: Allow
+      Action:
+        - 's3:ListBucket'
+      Resource: 'arn:aws:s3:::#{S3BucketName}'
+    - Effect: Allow
+      Action:
+        - 's3:PutObject'
+        - 's3:GetObject'
+      Resource: 'arn:aws:s3:::#{S3BucketName}/*'
+
+package:
+  exclude:
+    - node_modules/**
+    - container/**
+    - models/**
+    - images/**
+
+functions:
+  mapper:
+    handler: index.handlerMapper
+  inference-old:
+    handler: index.handlerInferenceOld
+    memorySize: 3008
+    timeout: 30
+    package:
+      individually: true
+      include:
+        - models/converted_model.tflite
+  inference-new:
+    handler: index.handlerInferenceNew
+    memorySize: 3008
+    timeout: 30
+    package:
+      individually: true
+      include:
+        - models/converted_model_quantized.tflite
+  publisher:
+    handler: index.handlerPublisher
+
+
+stepFunctions:
+  stateMachines:
+    HelloWorldStepFunction:
+      events:
+        - http:
+            path: startFunction
+            method: GET
+      name: ${self:service}-StepFunction
+      definition:
+        StartAt: StartStepF
+        States:
+          StartStepF:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [mapper, Arn]
+            Next: ParallelStepF
+          ParallelStepF:
+            Type: Parallel
+            Next: PublishStepF
+            Branches:
+              - StartAt: OldModel
+                States:
+                  OldModel:
+                    Type: Task
+                    Resource:
+                      Fn::GetAtt: [inference-old, Arn]
+                    End: True
+              - StartAt: NewModel
+                States:
+                  NewModel:
+                    Type: Task
+                    Resource:
+                      Fn::GetAtt: [inference-new, Arn]
+                    End: True
+          PublishStepF:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [publisher, Arn]
+            End: true
+
+plugins:
+  - serverless-step-functions
+  - serverless-pseudo-parameters
+
+resources:
+  Parameters:
+    S3BucketName:
+      Type: String
+      Default: course-pdl-inference
+      Description: S3 bucket which we will use to store images
