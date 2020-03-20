@@ -1,0 +1,6 @@
+
+.DS_Store
+**/.serverless
+**/node_modules
+**/__pycache__
+**/package-lock.json
