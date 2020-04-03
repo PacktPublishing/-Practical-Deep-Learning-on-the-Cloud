@@ -18,11 +18,15 @@ By the end of the course, you'll be able to build scalable and maintainable prod
 
 In this lesson, we will create our first application with serverless framework to get familiar with the framework.
 
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/2.5)
+
 Used services: AWS Step Functions, AWS Lambda
 
 ### 3.2 Training and Exporting a Model
 
 In this lesson, we will create our first deep learning application with TensorFlow to show how to train, import, and export the model.
+
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/3.2)
 
 Used libraries: Tensorflow, Keras
 
@@ -30,17 +34,23 @@ Used libraries: Tensorflow, Keras
 
 In this lesson,  we will create a deep learning application with a pre-trained TensorFlow model for image classification, to learn how to import and use the model.
 
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/3.4)
+
 Used libraries: Tensorflow, Keras
 
 ### 4.3 Using a Pretrained CNN Model for the New Dataset
 
 In this lesson, we will learn how to implement them using Keras framework and will showcase fine-tuning for the image classification task.
 
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/4.3)
+
 Used libraries: Tensorflow, Keras
 
 ### 4.4 Using AWS SageMaker to Train Deep Learning CNN Models
 
 In this lesson, we will learn how to easily go from running the training locally to running the same training code on the cloud.
+
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/4.4)
 
 Used libraries: Tensorflow, Keras
 
@@ -49,6 +59,8 @@ Used services: AWS SageMaker, AWS ECR
 ### 5.2 Deploying AWS Step Functions with AWS Fargate Using Serverless Framework
 
 In this lesson, we will learn how to deploy a custom processing pipeline using AWS Step Functions, along with AWS Fargate and AWS Lambda.
+
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/5.2)
 
 Used services: AWS Step Functions, AWS Fargate, AWS Lambda, AWS ECR
 
@@ -60,6 +72,8 @@ Execution graph:
 
 In this lesson, we will build data pipeline using AWS Step Functions, with AWS Fargate and AWS Lambda using serverless framework.
 
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/5.3)
+
 Used services: AWS Step Functions, AWS Fargate, AWS Lambda, AWS ECR
 
 Execution graph:
@@ -69,6 +83,8 @@ Execution graph:
 ### 6.2 Deploying AWS Step Functions with AWS Batch Using Serverless Framework
 
 This lesson will show to use it to deploy AWS Step Functions, AWS Batch, and AWS Lambda.
+
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/6.2)
 
 Used libraries: Tensorflow, Keras
 
@@ -82,6 +98,8 @@ Execution graph:
 
 In this lesson, we will show how to deploy the deep learning pipeline.
 
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/6.3)
+
 Used libraries: Tensorflow, Keras, TFLite
 
 Used services: AWS Step Functions, AWS Batch, AWS Lambda, AWS ECR
@@ -94,6 +112,8 @@ Execution graph:
 
 In production, one of the best ways to deploy serverless infrastructure is to use serverless framework. This lesson will show how to use it to deploy AWS Step Functions and AWS Lambda.
 
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/7.2)
+
 Used libraries: TFLite, Pillow
 
 Used services: AWS Step Functions, AWS Lambda
@@ -105,6 +125,8 @@ Execution graph:
 ### 7.3 Project - Deep Learning Inference Pipeline for CNN
 
 In this lesson, we will show how to deploy deep learning pipeline using serverless framework.
+
+[Code files](https://github.com/PacktPublishing/-Practical-Deep-Learning-on-the-Cloud/tree/master/7.3)
 
 Used libraries: TFLite, Pillow
 
