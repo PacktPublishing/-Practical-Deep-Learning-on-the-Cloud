@@ -4,7 +4,6 @@ Practical Deep Learning on the Cloud, published by Packt.
 Link to course: https://www.packtpub.com/data/practical-deep-learning-on-the-cloud-video
  
 ## About the course
-
 	
 Deep learning and machine learning applications are becoming the backbone of many businesses in both technological and traditional companies. Once organizations have achieved their first success in using ML/AI algorithms, the main issue they often face is how to automate and scale up their ML/AI workflows. This course will help you to design, develop, and train deep learning applications faster on the cloud without spending undue time and money.
 
