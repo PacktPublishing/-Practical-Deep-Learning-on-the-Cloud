@@ -27,7 +27,7 @@ This course is ideal for data scientists and machine learning engineers who are 
 This course has the following software requirements:<br/>
 For an optimal experience with hands-on labs and other practical activities, we recommend the following configuration:</br>
 ●	Processor: Quad-core 2GHz+ CPU
-●	Memory: 12GB
+●	Memory: 16GB
 ●	Storage: 100GB
 
 ### Software Requirements </br>
