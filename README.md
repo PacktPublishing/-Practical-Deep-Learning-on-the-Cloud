@@ -26,17 +26,17 @@ This course is ideal for data scientists and machine learning engineers who are 
 ### Technical Requirements
 This course has the following software requirements:<br/>
 For an optimal experience with hands-on labs and other practical activities, we recommend the following configuration:</br>
-●	Processor: Quad-core 2GHz+ CPU
-●	Memory: 16GB
-●	Storage: 100GB
+●	Processor: Quad-core 2GHz+ CPU </br>
+●	Memory: 16GB </br>
+●	Storage: 100GB </br>
 
 ### Software Requirements </br>
 ●	Operating system: Windows 10, Linux, Mac </br>
 ●	Browser: Firefox, Chrome </br>
-●	AWS account
-●	Python installation with pip (Python 3.x recommended)
-●	TensorFlow installation
-●	Node.js installation with npm
+●	AWS account </br>
+●	Python installation with pip (Python 3.x recommended) </br>
+●	TensorFlow installation </br>
+●	Node.js installation with npm </br>
 ●	Docker </br>
 
 
