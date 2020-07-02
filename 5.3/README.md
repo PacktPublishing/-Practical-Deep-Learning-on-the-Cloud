@@ -14,7 +14,7 @@ Execution graph:
 1. Go to `container` folder
 2. Run `$(aws ecr get-login --no-include-email --region us-east-1)`
 3. Run `aws ecr create-repository --repository-name datapipeline-fargate`
-4. Run `docker build -t datapipeline-fargate`
+4. Run `docker build -t datapipeline-fargate .`
 5. Run `docker tag datapipeline-fargate:latest <accountId>.dkr.ecr.us-east-1.amazonaws.com/datapipeline-fargate:latest` and replace `<accountId>` with your account id
 6. Go to lesson folder
 7. Create custom bucket using command `aws s3api create-bucket --bucket <bucket_name>`

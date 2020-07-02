@@ -11,7 +11,7 @@ Used services: AWS SageMaker, AWS ECR
 1. Go to `container` folder
 2. Run `$(aws ecr get-login --no-include-email --region us-east-1)`
 3. Run `aws ecr create-repository --repository-name sagemakerexample`
-4. Run `docker build -t sagemakerexample`
+4. Run `docker build -t sagemakerexample .`
 5. Run `docker tag sagemakerexample:latest <accountId>.dkr.ecr.us-east-1.amazonaws.com/sagemakerexample:latest` and replace `<accountId>` with your account id
 6. Go to lesson folder
 7. Run `python3 runSagemaker.py`

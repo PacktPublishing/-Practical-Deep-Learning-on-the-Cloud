@@ -15,7 +15,7 @@ Execution graph:
 1. Go to `container` folder
 2. Run `$(aws ecr get-login --no-include-email --region us-east-1)`
 3. Run `aws ecr create-repository --repository-name deep-learning-training-batch`
-4. Run `docker build -t deep-learning-training-batch`
+4. Run `docker build -t deep-learning-training-batch .`
 5. Run `docker tag deep-learning-training-batch:latest <accountId>.dkr.ecr.us-east-1.amazonaws.com/deep-learning-training-batch:latest` and replace `<accountId>` with your account id
 6. Go to lesson folder
 7. Create custom bucket using command `aws s3api create-bucket --bucket <bucket_name>`
